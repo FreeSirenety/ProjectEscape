@@ -2,33 +2,40 @@
 #include "DrawManager.h"
 #include <math.h>
 
-namespace esc
+PlayerObject::PlayerObject(sf::Sprite *sprite, sf::Vector2f position) : GameObject(sprite, position, false)
 {
+	hiding = false;
+	m_interactionRange = 10.0f;
+}
 
-	PlayerObject::PlayerObject(sf::Sprite *sprite, sf::Vector2f position) : GameObject(position, sf::Vector2f(32, 32), false, 0, sprite)
+void PlayerObject::update(float deltaTime)
+{
+	m_position += m_velocity * deltaTime;
+
+	//if sats för att kolla om musen trycks ner
 	{
+		int mouseX, mouseY; //Get the mouse position
 
-		m_interactionRange = 0;
+		//sf::IntRect rect(mouseX, mouseY, 1, 1);
 	}
+}
 
-	void PlayerObject::update(float deltaTime)
-	{
+void PlayerObject::draw(DrawManager *drawManager)
+{
+	drawManager->draw(this);
+}
 
-	}
+void PlayerObject::setInteractionRange(float range)
+{
+	m_interactionRange = range;
+}
 
-	void PlayerObject::setInteractionRange(float range)
-	{
-		m_interactionRange = range;
-	}
+sf::Vector2f PlayerObject::getRangeToObject(GameObject *obj)
+{
+	sf::Vector2f length;
 
-	sf::Vector2f PlayerObject::getRangeToObject(GameObject *obj)
-	{
-		sf::Vector2f length;
+	length.x = fabs(obj->getPosition().x - m_position.x);
+	length.y = fabs(obj->getPosition().y - m_position.y);
 
-		length.x = fabs(obj->getPosition().x - getPosition().x);
-		length.y = fabs(obj->getPosition().y - getPosition().y);
-
-		return sf::Vector2f();
-	}
-
+	return sf::Vector2f();
 }
