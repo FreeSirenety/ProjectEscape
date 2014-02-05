@@ -93,6 +93,7 @@
     <ClCompile Include="LightSource.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PlayerObject.cpp" />
+    <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="SpriteManager.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
@@ -106,6 +107,7 @@
     <ClInclude Include="LightningManager.h" />
     <ClInclude Include="LightSource.h" />
     <ClInclude Include="PlayerObject.h" />
+    <ClInclude Include="SoundManager.h" />
     <ClInclude Include="SpriteManager.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

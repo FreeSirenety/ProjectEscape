@@ -1,30 +1,34 @@
 #pragma once
 
-#include "SFML\Graphics.hpp"
+#include "stdafx.h"
 #include "GameObject.h"
 
-class DrawManager;
-class GameObject;
-
-class PlayerObject : public GameObject
+namespace esc
 {
-public:
-	PlayerObject(sf::Sprite *sprite, sf::Vector2f position);
 
-	virtual void update(float deltaTime);
+	class DrawManager;
 
-	virtual void draw(DrawManager *drawManager);
+	class PlayerObject : public GameObject
+	{
+	public:
+		PlayerObject(sf::Sprite *sprite, sf::Vector2f position);
 
-	void setInteractionRange(float range);
+		virtual void update(float deltaTime);
 
-	sf::Vector2f getRangeToObject(GameObject *obj);
+		virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
-	bool hiding;
+		void setInteractionRange(float range);
 
-	float m_interactionRange;
-	
-protected:
-	
+		sf::Vector2f getRangeToObject(GameObject *obj);
 
-	sf::Vector2f m_velocity;
-};
+		bool hiding;
+
+		float m_interactionRange;
+
+	protected:
+
+
+		sf::Vector2f m_velocity;
+	};
+
+}

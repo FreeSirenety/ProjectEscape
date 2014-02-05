@@ -2,40 +2,40 @@
 #include "DrawManager.h"
 #include <math.h>
 
-PlayerObject::PlayerObject(sf::Sprite *sprite, sf::Vector2f position) : GameObject(sprite, position, false)
+namespace esc
 {
-	hiding = false;
-	m_interactionRange = 10.0f;
-}
 
-void PlayerObject::update(float deltaTime)
-{
-	m_position += m_velocity * deltaTime;
-
-	//if sats för att kolla om musen trycks ner
+	PlayerObject::PlayerObject(sf::Sprite *sprite, sf::Vector2f position) : GameObject(position, sf::Vector2f(m_xSprite->getGlobalBounds().width, m_xSprite->getGlobalBounds().height), false, 10, m_xSprite)
 	{
-		int mouseX, mouseY; //Get the mouse position
-
-		//sf::IntRect rect(mouseX, mouseY, 1, 1);
+		hiding = false;
+		m_interactionRange = 10.0f;
 	}
-}
 
-void PlayerObject::draw(DrawManager *drawManager)
-{
-	drawManager->draw(this);
-}
+	void PlayerObject::update(float deltaTime)
+	{
+		setPosition(getPosition() + m_velocity * deltaTime);
 
-void PlayerObject::setInteractionRange(float range)
-{
-	m_interactionRange = range;
-}
+	}
 
-sf::Vector2f PlayerObject::getRangeToObject(GameObject *obj)
-{
-	sf::Vector2f length;
+	void PlayerObject::draw(sf::RenderTarget& target, sf::RenderStates states) const
+	{
+		states.transform *= getTransform();
+		target.draw(*m_xSprite, states);
+	}
 
-	length.x = fabs(obj->getPosition().x - m_position.x);
-	length.y = fabs(obj->getPosition().y - m_position.y);
+	void PlayerObject::setInteractionRange(float range)
+	{
+		m_interactionRange = range;
+	}
 
-	return sf::Vector2f();
+	sf::Vector2f PlayerObject::getRangeToObject(GameObject *obj)
+	{
+		sf::Vector2f length;
+
+		length.x = fabs(obj->getPosition().x - getPosition().x);
+		length.y = fabs(obj->getPosition().y - getPosition().y);
+
+		return sf::Vector2f();
+	}
+
 }

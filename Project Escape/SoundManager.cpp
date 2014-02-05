@@ -10,7 +10,7 @@ SFMLSoundProvider::SFMLSoundProvider()
 void SFMLSoundProvider::PlaySound(std::string filename) 
 {
 	
-	if(_soundBuffer.getDuration() ==  )
+	/*if(_soundBuffer.getDuration() ==  0)
 	{
 		_soundBuffer.loadFromFile(filename);
 	}
@@ -19,7 +19,7 @@ void SFMLSoundProvider::PlaySound(std::string filename)
 		_sound.stop();
 	}
 	_sound.setBuffer(_soundBuffer);
-	_sound.play();
+	_sound.play();*/
 }
 	
 void SFMLSoundProvider::PlaySong(std::string filename, bool looping)

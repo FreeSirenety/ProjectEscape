@@ -171,7 +171,7 @@ namespace esc
 
 			SDeadSector firstDead;
 
-			float minAngle = std::min_element(vCornerAngles.begin())
+			//float minAngle = std::min_element(vCornerAngles.begin(), vCornerAngles.begin())
 		}
 
 		m_vCorners = *p_vCorners;
