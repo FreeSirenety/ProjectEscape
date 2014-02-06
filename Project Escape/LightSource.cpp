@@ -83,6 +83,8 @@ namespace esc
 		std::map<Corner*, float> cornerAngles;
 
 		getRelevantCorners(&relevantCorners, &cornerAngles);
+
+		m_vCorners = relevantCorners;
 	}
 
 	void LightSource::getRelevantCorners(std::vector<Corner*> *p_vCorners, std::map<Corner*, float> *p_mCornerAngles)
@@ -132,49 +134,229 @@ namespace esc
 			}
 		}
 
+		std::vector<Corner*> vCleanedCorners;
+		std::vector<float> vDistanceToObject;
+
+		std::vector<GameObject*> vSortedObjects;
+
+		std::vector<GameObject*> vUnsortedObjects = *m_vObjects;
+
 		std::vector<SDeadSector> vDeadSectors;
 
-		float shortest = m_fRadious;
+		float fShortest = m_fRadious;
 
-		std::vector<Corner*> vClosestObjCorners;
-
-		Corner *closestCorner = nullptr;
-
-		for (auto corner : *p_vCorners)
+		for (auto object : *m_vObjects)
 		{
-			float currentDistance = corner->getDistanceToSource();
-
-			if (shortest > currentDistance)
-			{
-				shortest = currentDistance;
-				closestCorner = corner;
-			}
-				
+			vDistanceToObject.push_back(sqrtf((object->getPosition().x + object->getSize().x / 2 - getPosition().x) * (object->getPosition().x + object->getSize().x / 2 - getPosition().x) + (object->getPosition().y + object->getSize().y / 2 - getPosition().y) * (object->getPosition().y + object->getSize().y / 2 - getPosition().y)));
 		}
 
-		if (closestCorner != nullptr)
+		int size = vUnsortedObjects.size();
+
+		for (int i = 0; i < size; i++)
 		{
-			for (auto corner : *p_vCorners)
-			{
-				if (corner->getId() == closestCorner->getId())
-				{
-					corner->color = sf::Color::Green;
-					vClosestObjCorners.push_back(corner);
-				}
-			}
+			auto iter = std::min_element(vDistanceToObject.begin(), vDistanceToObject.end());
+			int index = iter - vDistanceToObject.begin();
+
+			vSortedObjects.push_back(vUnsortedObjects[index]);
+
+			auto removeIter = vUnsortedObjects.begin() + index;
+
+			vDistanceToObject.erase(iter);
+			vUnsortedObjects.erase(removeIter);
+		}
+
+		for (auto object : vSortedObjects)
+		{
+			float fDistToObject = sqrtf((object->getPosition().x + object->getSize().x / 2 - getPosition().x) * (object->getPosition().x + object->getSize().x / 2 - getPosition().x) + (object->getPosition().y + object->getSize().y / 2 - getPosition().y) * (object->getPosition().y + object->getSize().y / 2 - getPosition().y));
+			std::vector<Corner*> vObjCorners = object->getCorners();
+
+			SDeadSector DeadAddition;
 
 			std::vector<float> vCornerAngles;
-			for (auto corner : vClosestObjCorners)
+
+			for (auto corner : vObjCorners)
 			{
 				vCornerAngles.push_back(p_mCornerAngles->find(corner)->second);
 			}
 
-			SDeadSector firstDead;
+			auto itMinAngle = std::min_element(vCornerAngles.begin(), vCornerAngles.end());
+			float fMinAngle = *itMinAngle;
 
-			//float minAngle = std::min_element(vCornerAngles.begin(), vCornerAngles.begin())
+			auto itMaxAngle = std::max_element(vCornerAngles.begin(), vCornerAngles.end());
+			float fMaxAngle = *itMaxAngle;
+
+			if (fMaxAngle - fMinAngle > 180)
+			{
+				std::vector<float> vCorrMinMax;
+				for (auto angle : vCornerAngles)
+				{
+					if (!fabs(angle - fMinAngle) < 0.00001 && !fabs(angle - fMaxAngle) < 0.00001)
+					{
+						if (angle < fMaxAngle && angle > fMinAngle)
+						{
+							vCorrMinMax.push_back(angle);
+						}
+					}
+				}
+
+				fMaxAngle = *std::min_element(vCorrMinMax.begin(), vCorrMinMax.end());
+				fMinAngle = *std::max_element(vCorrMinMax.begin(), vCorrMinMax.end());
+			}
+			float fDistToMinCorner = 0;
+			float fDistToMaxCorner = 0;
+
+
+			for (auto corner : vObjCorners)
+			{
+				float cornerAngle = p_mCornerAngles->find(corner)->second;
+				float fDistToCorner = sqrtf((corner->position.x - getPosition().x) * (corner->position.x - getPosition().x) + (corner->position.y - getPosition().y) * (corner->position.y - getPosition().y));
+				if (fabs(cornerAngle - fMinAngle) < 0.00001 && fabs(cornerAngle - fMinAngle) < 0.00001)
+				{
+					fDistToMinCorner = fDistToCorner;
+				}
+				else if (fabs(cornerAngle - fMaxAngle) < 0.00001 && fabs(cornerAngle - fMaxAngle) < 0.00001)
+				{
+					fDistToMaxCorner = fDistToCorner;
+				}
+			}
+
+			DeadAddition.m_fFinishAngle = fMaxAngle;
+			DeadAddition.m_fStartingAngle = fMinAngle;
+
+			
+
+			if (vDeadSectors.size() > 0)
+			{
+				for (auto corner : vObjCorners)
+				{
+					float fDistToCorner = sqrtf((corner->position.x - getPosition().x) * (corner->position.x - getPosition().x) + (corner->position.y - getPosition().y) * (corner->position.y - getPosition().y));
+					if (m_fRadious < fDistToCorner)
+					{
+						continue;
+					}
+					bool bInSector = false;
+					float cornerAngle = p_mCornerAngles->find(corner)->second;
+
+					if (fabs(cornerAngle - fMinAngle) < 0.00001 && fabs(cornerAngle - fMinAngle) < 0.00001)
+					{
+						fDistToMinCorner = fDistToCorner;
+						for (auto sector : vDeadSectors)
+						{
+							if (sector.m_fStartingAngle > sector.m_fFinishAngle)
+							{
+								if (cornerAngle > sector.m_fStartingAngle || cornerAngle < sector.m_fFinishAngle)
+								{
+									bInSector = true;
+								}
+							}
+							else
+							{
+								if (cornerAngle > sector.m_fStartingAngle && cornerAngle < sector.m_fFinishAngle)
+								{
+									bInSector = true;
+								}
+							}
+						}
+
+						if (!bInSector)
+						{
+							vCleanedCorners.push_back(corner);
+						}
+					}
+					else if (fabs(cornerAngle - fMaxAngle) < 0.00001 && fabs(cornerAngle - fMaxAngle) < 0.00001)
+					{
+						fDistToMaxCorner = fDistToCorner;
+						for (auto sector : vDeadSectors)
+						{
+							if (sector.m_fStartingAngle > sector.m_fFinishAngle)
+							{
+								if (cornerAngle > sector.m_fStartingAngle || cornerAngle < sector.m_fFinishAngle)
+								{
+									bInSector = true;
+								}
+							}
+							else
+							{
+								if (cornerAngle > sector.m_fStartingAngle && cornerAngle < sector.m_fFinishAngle)
+								{
+									bInSector = true;
+								}
+							}
+						}
+
+						if (!bInSector)
+						{
+							vCleanedCorners.push_back(corner);
+						}
+					}
+					else if (fabs(fDistToCorner) < fabs(fDistToMaxCorner) && fabs(fDistToCorner) < fabs(fDistToMinCorner))
+					{
+						for (auto sector : vDeadSectors)
+						{
+							if (sector.m_fStartingAngle > sector.m_fFinishAngle)
+							{
+								if (cornerAngle > sector.m_fStartingAngle || cornerAngle < sector.m_fFinishAngle)
+								{
+									bInSector = true;
+								}
+							}
+							else
+							{
+								if (cornerAngle > sector.m_fStartingAngle && cornerAngle < sector.m_fFinishAngle)
+								{
+									bInSector = true;
+								}
+							}
+						}
+
+						if (!bInSector)
+						{
+							vCleanedCorners.push_back(corner);
+						}
+					}
+
+				}
+
+				vDeadSectors.push_back(DeadAddition);
+			}
+			else
+			{
+				for (auto corner : vObjCorners)
+				{
+					float fDistToCorner = sqrtf((corner->position.x - getPosition().x) * (corner->position.x - getPosition().x) + (corner->position.y - getPosition().y) * (corner->position.y - getPosition().y));
+					if (m_fRadious < fDistToCorner)
+					{
+						continue;
+					}
+
+					float cornerAngle = p_mCornerAngles->find(corner)->second;
+					
+					if (fabs(cornerAngle - fMinAngle) < 0.00001 && fabs(cornerAngle - fMinAngle) < 0.00001)
+					{
+						vCleanedCorners.push_back(corner);
+					}
+					else if (fabs(cornerAngle - fMaxAngle) < 0.00001 && fabs(cornerAngle - fMaxAngle) < 0.00001)
+					{
+						vCleanedCorners.push_back(corner);
+					}
+					else if (fabs(fDistToCorner) < fabs(fDistToMaxCorner) && fabs(fDistToCorner) < fabs(fDistToMinCorner))
+					{
+						vCleanedCorners.push_back(corner);
+					}
+				}
+
+				vDeadSectors.push_back(DeadAddition);
+			}
+
+			*p_vCorners = vCleanedCorners;
+
 		}
+	
+	}
 
-		m_vCorners = *p_vCorners;
+	void createFan(std::vector<Corner*> *p_vCorners, std::map<Corner*, float> *p_mCornerAngles)
+	{
+
 	}
 
 	float LightSource::getCornerAngle(Corner* p_xCorner)

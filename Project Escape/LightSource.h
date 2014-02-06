@@ -36,6 +36,8 @@ namespace esc
 
 		void getRelevantCorners(std::vector<Corner*> *p_vCorners, std::map<Corner*, float> *p_mCornerAngles);
 
+		void createFan(std::vector<Corner*> *p_vCorners, std::map<Corner*, float> *p_mCornerAngles);
+
 		float getCornerAngle(Corner* p_xCorner);
 
 	private:
