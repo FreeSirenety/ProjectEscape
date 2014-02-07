@@ -28,15 +28,14 @@ namespace esc
 	
 	void LightSource::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
-		for (auto corner : m_vCorners)
-		{
-			sf::VertexArray line(sf::PrimitiveType::Lines, 2);
-			line[0] = *corner;
-			line[1] = *corner;
+		sf::VertexArray triangleFan(sf::TrianglesFan, m_vTriangleFan.size());
 
-			line[1].position = getPosition();
-			target.draw(line, states);
+		for (int i = 0; i < m_vTriangleFan.size(); i++)
+		{
+			triangleFan[i] = *m_vTriangleFan[i];
 		}
+
+		target.draw(triangleFan, states);
 	}
 
 	void LightSource::setRadious(float p_fRadious)
@@ -78,11 +77,16 @@ namespace esc
 
 	void LightSource::createLight()
 	{
+		m_vTriangleFan.clear();
+		
+
 		std::vector<Corner*> relevantCorners;
 
 		std::map<Corner*, float> cornerAngles;
 
 		getRelevantCorners(&relevantCorners, &cornerAngles);
+
+		createFan(&relevantCorners, &cornerAngles);
 
 		m_vCorners = relevantCorners;
 	}
@@ -93,10 +97,15 @@ namespace esc
 
 		for (auto object : *m_vObjects)
 		{
+			
+
 			for (auto corner : object->getCorners())
 			{
-				corner->color = sf::Color::Red;
+				
+				corner->color = sf::Color(255, 255, 255, 1 - corner->getDistanceToSource() / m_fRadious);
 				corner->setDistanceToSource(getPosition());
+				if (corner->getDistanceToSource() > m_fRadious)
+					continue;
 				m_vCorners.push_back(corner);
 
 				float fCornerAngle = getCornerAngle(corner);
@@ -176,7 +185,21 @@ namespace esc
 
 			for (auto corner : vObjCorners)
 			{
-				vCornerAngles.push_back(p_mCornerAngles->find(corner)->second);
+				if (p_mCornerAngles->find(corner) != p_mCornerAngles->end())
+				{
+					vCornerAngles.push_back(p_mCornerAngles->find(corner)->second);
+				}
+				else
+				{
+					continue;
+				}
+					
+				
+			}
+
+			if (vCornerAngles.size() == 0)
+			{
+				continue;
 			}
 
 			auto itMinAngle = std::min_element(vCornerAngles.begin(), vCornerAngles.end());
@@ -199,6 +222,9 @@ namespace esc
 					}
 				}
 
+				if (vCorrMinMax.size() == 0)
+					continue;
+
 				fMaxAngle = *std::min_element(vCorrMinMax.begin(), vCorrMinMax.end());
 				fMinAngle = *std::max_element(vCorrMinMax.begin(), vCorrMinMax.end());
 			}
@@ -208,6 +234,8 @@ namespace esc
 
 			for (auto corner : vObjCorners)
 			{
+				if (p_mCornerAngles->find(corner) == p_mCornerAngles->end())
+					continue;
 				float cornerAngle = p_mCornerAngles->find(corner)->second;
 				float fDistToCorner = sqrtf((corner->position.x - getPosition().x) * (corner->position.x - getPosition().x) + (corner->position.y - getPosition().y) * (corner->position.y - getPosition().y));
 				if (fabs(cornerAngle - fMinAngle) < 0.00001 && fabs(cornerAngle - fMinAngle) < 0.00001)
@@ -329,34 +357,297 @@ namespace esc
 						continue;
 					}
 
-					float cornerAngle = p_mCornerAngles->find(corner)->second;
-					
-					if (fabs(cornerAngle - fMinAngle) < 0.00001 && fabs(cornerAngle - fMinAngle) < 0.00001)
+					if (p_mCornerAngles->find(corner) != p_mCornerAngles->end())
 					{
-						vCleanedCorners.push_back(corner);
-					}
-					else if (fabs(cornerAngle - fMaxAngle) < 0.00001 && fabs(cornerAngle - fMaxAngle) < 0.00001)
-					{
-						vCleanedCorners.push_back(corner);
-					}
-					else if (fabs(fDistToCorner) < fabs(fDistToMaxCorner) && fabs(fDistToCorner) < fabs(fDistToMinCorner))
-					{
-						vCleanedCorners.push_back(corner);
+						float cornerAngle = p_mCornerAngles->find(corner)->second;
+
+						if (fabs(cornerAngle - fMinAngle) < 0.00001 && fabs(cornerAngle - fMinAngle) < 0.00001)
+						{
+							vCleanedCorners.push_back(corner);
+						}
+						else if (fabs(cornerAngle - fMaxAngle) < 0.00001 && fabs(cornerAngle - fMaxAngle) < 0.00001)
+						{
+							vCleanedCorners.push_back(corner);
+						}
+						else if (fabs(fDistToCorner) < fabs(fDistToMaxCorner) && fabs(fDistToCorner) < fabs(fDistToMinCorner))
+						{
+							vCleanedCorners.push_back(corner);
+						}
 					}
 				}
 
 				vDeadSectors.push_back(DeadAddition);
 			}
 
-			*p_vCorners = vCleanedCorners;
+			
 
 		}
+
+		*p_vCorners = vCleanedCorners;
 	
 	}
 
-	void createFan(std::vector<Corner*> *p_vCorners, std::map<Corner*, float> *p_mCornerAngles)
+	void LightSource::createFan(std::vector<Corner*> *p_vCorners, std::map<Corner*, float> *p_mCornerAngles)
 	{
+		if (p_vCorners->size() == 0)
+		{
+			return;
+		}
 
+		sf::Vertex *playerVertex = new sf::Vertex(getPosition(), sf::Color::White);
+
+		m_vTriangleFan.clear();
+
+		m_vTriangleFan.push_back(playerVertex);
+
+		std::map<float, Corner*> mCornerAngles;
+		std::vector<float> vCornerAngles;
+
+		for (auto iter = p_mCornerAngles->rbegin(); iter != p_mCornerAngles->rend(); ++iter)
+		{
+			if (mCornerAngles.find(iter->second) != mCornerAngles.end())
+			{
+				continue;
+			}
+			mCornerAngles.insert(std::pair<float, Corner*>(iter->second, iter->first)); 
+			vCornerAngles.push_back(iter->second);
+		}
+		int maxCount = 0;
+
+		bool bHasPassedZero = false;
+
+		float fLastAngle = m_fStartAngle;
+
+		for (float fCurrentAngle = m_fStartAngle; true; fCurrentAngle += 1)
+		{
+			if (fCurrentAngle > 360)
+			{
+				fCurrentAngle -= 360;
+			}
+
+			if (fLastAngle > fCurrentAngle)
+			{
+				bHasPassedZero = true;
+			}
+
+			if (bHasPassedZero && fCurrentAngle < 1)
+			{
+				//return;
+			}
+
+			fLastAngle = fCurrentAngle;
+			maxCount++;
+
+			if (maxCount > 360)
+			{
+				return;
+			}
+
+			float endAngle = m_fStartAngle + m_fLightWidthAngle;
+
+			if (endAngle > 359.99)
+			{
+				endAngle -= 360.01;
+			}
+
+			if (m_fStartAngle > endAngle)
+			{
+				if (bHasPassedZero && fCurrentAngle > endAngle)
+				{
+					if (fabs(m_fLightWidthAngle - 360) < 0.001)
+					{
+						sf::Vertex *vertex = new sf::Vertex(*m_vTriangleFan[1]);
+						m_vTriangleFan.push_back(vertex);
+					}
+					return;
+				}
+			}
+			else if (fCurrentAngle > endAngle)
+			{
+				return;
+			}
+
+			bool bCornerInRange = false;
+			for (auto cornerAngle : vCornerAngles)
+			{
+				if (fCurrentAngle < cornerAngle && fCurrentAngle + 1 > cornerAngle)
+				{
+					bCornerInRange = true;
+					fCurrentAngle = cornerAngle;
+					Corner *xCorner = mCornerAngles.find(fCurrentAngle)->second;
+
+					xCorner->color = sf::Color(255, 255, 255, (1.f - xCorner->getDistanceToSource() / m_fRadious) * 255);
+
+					std::vector<float> vCurrCornerAngles;
+
+					if (xCorner->position != getPosition())
+						m_vTriangleFan.push_back(xCorner);
+
+					std::vector<Corner*> additionalCorners;
+					
+
+					for (auto corner : *p_vCorners)
+					{
+						float fCornerAngle = p_mCornerAngles->find(corner)->second;
+						if (corner->getId() == xCorner->getId() && corner != xCorner && corner->getDistanceToSource() < m_fRadious && corner->position != getPosition())// && fCurrentAngle < fCornerAngle)
+						{
+							//float fDiff = fabs(fCurrentAngle - fCornerAngle);
+							if (fCurrentAngle > fCornerAngle)
+							{
+								//printf("Current Angle: %f\nCorner Angle: %f\n", fCurrentAngle, fCornerAngle);
+							}
+
+							/*if (fDiff > 180)
+							{
+								if (fCurrentAngle > fCornerAngle)
+								{
+									corner->color = sf::Color(255, 255, 255, (1.f - corner->getDistanceToSource() / m_fRadious) * 255);
+									additionalCorners.push_back(corner);
+									vCurrCornerAngles.push_back(getCornerAngle(corner));
+									//fCurrentAngle = fCornerAngle;
+								}
+							}
+							else if (fCurrentAngle < fCornerAngle)*/
+							{
+								corner->color = sf::Color(255, 255, 255, (1.f - corner->getDistanceToSource() / m_fRadious) * 255);
+								additionalCorners.push_back(corner);
+								vCurrCornerAngles.push_back(getCornerAngle(corner));
+							}
+							
+						}
+					}
+
+					if (vCurrCornerAngles.size() != 0 && additionalCorners.size() != 0)
+					{
+						auto additionalAnglesIter = std::minmax_element(vCurrCornerAngles.begin(), vCurrCornerAngles.end());
+
+						if (*additionalAnglesIter.first == *additionalAnglesIter.second && additionalCorners.size() > 0)
+						{
+							m_vTriangleFan.push_back(additionalCorners[0]);
+
+							fCurrentAngle = *additionalAnglesIter.first;
+						}
+						else if (additionalCorners.size() == 3)
+						{
+							int xFirstIndex = additionalAnglesIter.first - vCurrCornerAngles.begin();
+							int xSecondIndex = additionalAnglesIter.second - vCurrCornerAngles.begin();
+
+							int iMiddleIndex;
+
+							for (int i = 0; i < 3; i++)
+							{
+								if (i != xFirstIndex && i != xSecondIndex)
+								{
+									iMiddleIndex = i;
+								}
+							}
+
+							m_vTriangleFan.push_back(additionalCorners[xFirstIndex]);
+							m_vTriangleFan.push_back(additionalCorners[iMiddleIndex]);
+							m_vTriangleFan.push_back(additionalCorners[xSecondIndex]);
+
+							fCurrentAngle = *additionalAnglesIter.second;
+						}
+						else if (*additionalAnglesIter.first < *additionalAnglesIter.second)
+						{
+							int xFirstIndex = additionalAnglesIter.first - vCurrCornerAngles.begin();
+							int xSecondIndex = additionalAnglesIter.second - vCurrCornerAngles.begin();
+
+							float firstAngle = *additionalAnglesIter.first;
+							float secondAngle = *additionalAnglesIter.second;
+
+							if (firstAngle < secondAngle)
+							{
+								if (secondAngle - firstAngle > 180)
+								{
+									if (fCurrentAngle < firstAngle)
+									{
+										//m_vTriangleFan.push_back(additionalCorners[xSecondIndex]);
+										m_vTriangleFan.push_back(additionalCorners[xFirstIndex]);
+										
+										fCurrentAngle = firstAngle;
+									}
+									else if (fCurrentAngle > secondAngle)
+									{
+										//m_vTriangleFan.push_back(additionalCorners[xFirstIndex]);
+										m_vTriangleFan.push_back(additionalCorners[xSecondIndex]);
+										
+										fCurrentAngle = firstAngle - 0.1;
+									}
+								}
+								else
+								{
+									m_vTriangleFan.push_back(additionalCorners[xFirstIndex]);
+									m_vTriangleFan.push_back(additionalCorners[xSecondIndex]);
+
+									fCurrentAngle = *additionalAnglesIter.second;
+								}
+							}
+							else if (secondAngle < firstAngle)
+							{
+								if (secondAngle - firstAngle > 180)
+								{
+									if (fCurrentAngle < firstAngle)
+									{
+										m_vTriangleFan.push_back(additionalCorners[xSecondIndex]);
+										fCurrentAngle = firstAngle;
+									}
+									else if (fCurrentAngle > secondAngle)
+									{
+										m_vTriangleFan.push_back(additionalCorners[xFirstIndex]);
+										fCurrentAngle = secondAngle;
+									}
+								}
+								else
+								{
+									m_vTriangleFan.push_back(additionalCorners[xSecondIndex]);
+									m_vTriangleFan.push_back(additionalCorners[xFirstIndex]);
+
+									fCurrentAngle = *additionalAnglesIter.second;
+								}
+							}
+
+							
+
+							
+						}
+						else if (*additionalAnglesIter.first > *additionalAnglesIter.second)
+						{
+							int xFirstIndex = additionalAnglesIter.second - vCurrCornerAngles.begin();
+							int xSecondIndex = additionalAnglesIter.first - vCurrCornerAngles.begin();
+
+							m_vTriangleFan.push_back(additionalCorners[xFirstIndex]);
+							m_vTriangleFan.push_back(additionalCorners[xSecondIndex]);
+
+							fCurrentAngle = *additionalAnglesIter.second;
+						}
+					}
+					
+				}
+			}
+
+			if (bCornerInRange == false)
+			{
+				sf::Vertex *vertex = new sf::Vertex(sf::Vector2f(cosf(fCurrentAngle * 0.017453292519943) * m_fRadious, sinf(fCurrentAngle * 0.017453292519943) * m_fRadious) + getPosition(), sf::Color(255, 255, 255, 0));
+
+				if (vertex->position != getPosition())
+				{
+					m_vTriangleFan.push_back(vertex);
+
+				}
+				else
+				{
+					delete vertex;
+					vertex = nullptr;
+				}
+
+				
+			}
+
+			if (fCurrentAngle > m_fStartAngle + m_fLightWidthAngle)
+				break;
+
+		}
 	}
 
 	float LightSource::getCornerAngle(Corner* p_xCorner)

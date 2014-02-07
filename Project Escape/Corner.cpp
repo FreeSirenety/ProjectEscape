@@ -13,9 +13,9 @@ namespace esc
 		return m_iId;
 	}
 
-	void Corner::setDistanceToSource(sf::Vector2f p_v2fPlayerPosition)
+	void Corner::setDistanceToSource(sf::Vector2f p_v2fSourcePosition)
 	{
-		m_fDistanceToSource = sqrtf((p_v2fPlayerPosition.x - position.x) * (p_v2fPlayerPosition.x - position.x) + (p_v2fPlayerPosition.y - position.y) * (p_v2fPlayerPosition.y - position.y));
+		m_fDistanceToSource = sqrtf((p_v2fSourcePosition.x - position.x) * (p_v2fSourcePosition.x - position.x) + (p_v2fSourcePosition.y - position.y) * (p_v2fSourcePosition.y - position.y));
 	}
 
 	float Corner::getDistanceToSource()

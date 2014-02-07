@@ -56,6 +56,8 @@ namespace esc
 		sf::Vector2f m_v2fSize;
 
 		std::vector<Corner*> m_vCorners;
+
+		std::vector<sf::Vertex*> m_vTriangleFan;
 	};
 
 }
