@@ -11,7 +11,7 @@ namespace esc
 	class PlayerObject : public GameObject
 	{
 	public:
-		PlayerObject(sf::Sprite *sprite, sf::Vector2f position);
+		PlayerObject(sf::Sprite *p_sprite, sf::Vector2f p_position, sf::RenderWindow *p_window);
 
 		virtual void update(float deltaTime);
 
@@ -20,15 +20,21 @@ namespace esc
 		void setInteractionRange(float range);
 
 		sf::Vector2f getRangeToObject(GameObject *obj);
-
-		bool hiding;
+		
+		
+		float calcAngle(float x, float y);
+		
+		bool m_hiding;
+		bool m_sneaking;
 
 		float m_interactionRange;
 
 	protected:
-
-
+		
+		float m_walkspeed = 0.4;
+		float m_sneakspeed = 0.2f;
 		sf::Vector2f m_velocity;
+		sf::RenderWindow *p_window;
 	};
 
 }

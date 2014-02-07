@@ -5,16 +5,77 @@
 namespace esc
 {
 
-	PlayerObject::PlayerObject(sf::Sprite *sprite, sf::Vector2f position) : GameObject(position, sf::Vector2f(m_xSprite->getGlobalBounds().width, m_xSprite->getGlobalBounds().height), false, 10, m_xSprite)
+	PlayerObject::PlayerObject(sf::Sprite *sprite, sf::Vector2f position, sf::RenderWindow *window) 
+			: GameObject(position, sf::Vector2f(sprite->getGlobalBounds().width, sprite->getGlobalBounds().height), false, 10, sprite)
 	{
-		hiding = false;
+		m_hiding = false;
 		m_interactionRange = 10.0f;
+		setOrigin(20, 17);
+		p_window = window;
 	}
 
 	void PlayerObject::update(float deltaTime)
 	{
-		setPosition(getPosition() + m_velocity * deltaTime);
+		//setPosition(getPosition() + m_velocity * deltaTime);
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+		{
+			m_sneaking = true;
+		}
+		else
+			m_sneaking = false;
 
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+		{
+			if (m_sneaking)
+				move(0, -m_sneakspeed);
+			else
+				move(0, -m_walkspeed);
+		}
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+		{
+			if (m_sneaking)
+				move(0, m_sneakspeed);
+			else
+				move(0, m_walkspeed);
+		}
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+		{
+			if (m_sneaking)
+				move(-m_sneakspeed, 0);
+			else
+				move(-m_walkspeed, 0);
+		}
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+		{
+			if (m_sneaking)
+				move(m_sneakspeed, 0);
+			else
+				move(m_walkspeed, 0);
+		}
+
+		setRotation(calcAngle(sf::Mouse::getPosition(*p_window).x, sf::Mouse::getPosition(*p_window).y));
+	}
+
+	float PlayerObject::calcAngle(float mouse_x, float mouse_y)
+	{
+		sf::Vector2f direction(getPosition().x - mouse_x, getPosition().y - mouse_y);
+
+		float angle = (float)(atan2f(direction.y, direction.x) / 0.017453292519943) + 180;
+
+		printf("Angle: %f\n", angle);
+
+		return angle;
+		
+		
+		/*float x = mouse_x - getPosition().x;
+		float y = mouse_y - getPosition().y;
+
+		float hyp = sqrt((x*x) + (y*y));*/
+
+		
 	}
 
 	void PlayerObject::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -37,5 +98,6 @@ namespace esc
 
 		return sf::Vector2f();
 	}
+
 
 }
