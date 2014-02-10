@@ -8,6 +8,13 @@ namespace esc
 	class Corner;
 	class DrawManager;
 
+	enum EObjectType
+	{
+		WALL,
+		PLAYER,
+		GUARD
+	};
+
 	class GameObject : public sf::Drawable, public sf::Transformable
 	{
 	public:
@@ -35,6 +42,8 @@ namespace esc
 		void setId(int p_iObjectId);
 		int getId();
 
+		void setType(EObjectType p_eObjectType);
+		EObjectType getType();
 
 	protected:
 		sf::Sprite *m_xSprite;
@@ -47,6 +56,8 @@ namespace esc
 		int m_iObjectId;
 
 		sf::Vector2f m_v2fSize;
+
+		EObjectType m_eObjectType;
 	};
 }
 

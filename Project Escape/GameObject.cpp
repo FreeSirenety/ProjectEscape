@@ -101,4 +101,14 @@ namespace esc
 		return m_iObjectId;
 	}
 
+	void GameObject::setType(EObjectType p_eObjectType)
+	{
+		m_eObjectType = p_eObjectType;
+	}
+
+	EObjectType GameObject::getType()
+	{
+		return m_eObjectType;
+	}
+
 }

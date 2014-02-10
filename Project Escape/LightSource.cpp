@@ -156,7 +156,7 @@ namespace esc
 
 		for (auto object : *m_vObjects)
 		{
-			vDistanceToObject.push_back(sqrtf((object->getPosition().x + object->getSize().x / 2 - getPosition().x) * (object->getPosition().x + object->getSize().x / 2 - getPosition().x) + (object->getPosition().y + object->getSize().y / 2 - getPosition().y) * (object->getPosition().y + object->getSize().y / 2 - getPosition().y)));
+			vDistanceToObject.push_back(sqrtf((object->getPosition().x + object->getSize().x * 0.5f - getPosition().x) * (object->getPosition().x + object->getSize().x * 0.5f - getPosition().x) + (object->getPosition().y + object->getSize().y * 0.5f - getPosition().y) * (object->getPosition().y + object->getSize().y * 0.5f - getPosition().y)));
 		}
 
 		int size = vUnsortedObjects.size();
@@ -176,7 +176,7 @@ namespace esc
 
 		for (auto object : vSortedObjects)
 		{
-			float fDistToObject = sqrtf((object->getPosition().x + object->getSize().x / 2 - getPosition().x) * (object->getPosition().x + object->getSize().x / 2 - getPosition().x) + (object->getPosition().y + object->getSize().y / 2 - getPosition().y) * (object->getPosition().y + object->getSize().y / 2 - getPosition().y));
+			float fDistToObject = sqrtf((object->getPosition().x + object->getSize().x * 0.5f - getPosition().x) * (object->getPosition().x + object->getSize().x * 0.5f - getPosition().x) + (object->getPosition().y + object->getSize().y * 0.5f - getPosition().y) * (object->getPosition().y + object->getSize().y * 0.5f - getPosition().y));
 			std::vector<Corner*> vObjCorners = object->getCorners();
 
 			SDeadSector DeadAddition;
@@ -251,7 +251,7 @@ namespace esc
 			DeadAddition.m_fFinishAngle = fMaxAngle;
 			DeadAddition.m_fStartingAngle = fMinAngle;
 
-			
+			std::vector<Corner*> vCornersOutsideSector;
 
 			if (vDeadSectors.size() > 0)
 			{
@@ -289,6 +289,7 @@ namespace esc
 						if (!bInSector)
 						{
 							vCleanedCorners.push_back(corner);
+							vCornersOutsideSector.push_back(corner);
 						}
 					}
 					else if (fabs(cornerAngle - fMaxAngle) < 0.00001 && fabs(cornerAngle - fMaxAngle) < 0.00001)
@@ -315,6 +316,7 @@ namespace esc
 						if (!bInSector)
 						{
 							vCleanedCorners.push_back(corner);
+							vCornersOutsideSector.push_back(corner);
 						}
 					}
 					else if (fabs(fDistToCorner) < fabs(fDistToMaxCorner) && fabs(fDistToCorner) < fabs(fDistToMinCorner))
@@ -340,12 +342,11 @@ namespace esc
 						if (!bInSector)
 						{
 							vCleanedCorners.push_back(corner);
+							vCornersOutsideSector.push_back(corner);
 						}
 					}
 
 				}
-
-				vDeadSectors.push_back(DeadAddition);
 			}
 			else
 			{
@@ -364,22 +365,28 @@ namespace esc
 						if (fabs(cornerAngle - fMinAngle) < 0.00001 && fabs(cornerAngle - fMinAngle) < 0.00001)
 						{
 							vCleanedCorners.push_back(corner);
+							vCornersOutsideSector.push_back(corner);
 						}
 						else if (fabs(cornerAngle - fMaxAngle) < 0.00001 && fabs(cornerAngle - fMaxAngle) < 0.00001)
 						{
 							vCleanedCorners.push_back(corner);
+							vCornersOutsideSector.push_back(corner);
 						}
 						else if (fabs(fDistToCorner) < fabs(fDistToMaxCorner) && fabs(fDistToCorner) < fabs(fDistToMinCorner))
 						{
 							vCleanedCorners.push_back(corner);
+							vCornersOutsideSector.push_back(corner);
 						}
 					}
 				}
-
-				vDeadSectors.push_back(DeadAddition);
 			}
 
-			
+			if (vCornersOutsideSector.size() > 0)
+			{
+				printf("Obj id: %i   Amount of corners outside sector: %i\n", object->getId(), vCornersOutsideSector.size());
+			}
+
+			vDeadSectors.push_back(DeadAddition);
 
 		}
 
@@ -409,6 +416,7 @@ namespace esc
 			{
 				continue;
 			}
+
 			mCornerAngles.insert(std::pair<float, Corner*>(iter->second, iter->first)); 
 			vCornerAngles.push_back(iter->second);
 		}
@@ -418,7 +426,7 @@ namespace esc
 
 		float fLastAngle = m_fStartAngle;
 
-		for (float fCurrentAngle = m_fStartAngle; true; fCurrentAngle += 1)
+		for (float fCurrentAngle = m_fStartAngle; true; fCurrentAngle += 5)
 		{
 			if (fCurrentAngle > 360)
 			{
@@ -470,7 +478,7 @@ namespace esc
 			bool bCornerInRange = false;
 			for (auto cornerAngle : vCornerAngles)
 			{
-				if (fCurrentAngle < cornerAngle && fCurrentAngle + 1 > cornerAngle)
+				if (fCurrentAngle < cornerAngle && fCurrentAngle + 5 > cornerAngle)
 				{
 					bCornerInRange = true;
 					fCurrentAngle = cornerAngle;
