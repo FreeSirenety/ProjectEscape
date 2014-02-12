@@ -9,54 +9,87 @@ namespace esc
 			: GameObject(position, sf::Vector2f(sprite->getGlobalBounds().width, sprite->getGlobalBounds().height), false, 10, sprite)
 	{
 		m_hiding = false;
-		m_interactionRange = 10.0f;
+		m_interactionRange = 30.0f;
 		setOrigin(20, 17);
 		p_window = window;
 	}
 
-	void PlayerObject::update(float deltaTime)
+	void PlayerObject::update(float deltaTime, std::vector<GameObject*> Hideableobjects)
 	{
 		//setPosition(getPosition() + m_velocity * deltaTime);
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+		
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
 		{
-			m_sneaking = true;
+			if (m_hiding == false)
+				{
+					int i = 0;
+					while( i < Hideableobjects.size())
+					{
+						if ( fabs(getPosition().x - Hideableobjects[i]->getPosition().x) < m_interactionRange &&
+							 fabs(getPosition().y - Hideableobjects[i]->getPosition().y) < m_interactionRange)
+						{
+					
+							m_hiding = true;
+							setPosition(Hideableobjects[i]->getPosition());
+							setRotation(0.0f);
+						}
+					}
+					i++;
+				}
 		}
-		else
-			m_sneaking = false;
-
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+		
+		if (m_hiding == false)
 		{
-			if (m_sneaking)
-				move(0, -m_sneakspeed);
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+			{
+				m_sneaking = true;
+			}
 			else
-				move(0, -m_walkspeed);
+				m_sneaking = false;
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && getPosition().y > 0)
+			{
+				if (m_sneaking)
+					move(0, -m_sneakspeed);
+				else
+					move(0, -m_walkspeed);
+			}
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && getPosition().y < 640)
+			{
+				if (m_sneaking)
+					move(0, m_sneakspeed);
+				else
+					move(0, m_walkspeed);
+			}
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && getPosition().x > 0)
+			{
+				if (m_sneaking)
+					move(-m_sneakspeed, 0);
+				else
+					move(-m_walkspeed, 0);
+			}
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) && getPosition().x < 1024)
+			{
+				if (m_sneaking)
+					move(m_sneakspeed, 0);
+				else
+					move(m_walkspeed, 0);
+			}
+
+			setRotation(calcAngle(sf::Mouse::getPosition(*p_window).x, sf::Mouse::getPosition(*p_window).y));
 		}
 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+		if (m_hiding == true)
 		{
-			if (m_sneaking)
-				move(0, m_sneakspeed);
-			else
-				move(0, m_walkspeed);
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+			{
+				m_hiding = false;
+			}
 		}
-
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-		{
-			if (m_sneaking)
-				move(-m_sneakspeed, 0);
-			else
-				move(-m_walkspeed, 0);
-		}
-
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-		{
-			if (m_sneaking)
-				move(m_sneakspeed, 0);
-			else
-				move(m_walkspeed, 0);
-		}
-
-		setRotation(calcAngle(sf::Mouse::getPosition(*p_window).x, sf::Mouse::getPosition(*p_window).y));
+		
 	}
 
 	float PlayerObject::calcAngle(float mouse_x, float mouse_y)

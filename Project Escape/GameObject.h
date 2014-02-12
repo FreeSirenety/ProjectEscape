@@ -24,6 +24,8 @@ namespace esc
 
 		virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
+		bool isHideable();
+
 		void setSprite(sf::Sprite *p_xSprite);
 		sf::Sprite *getSprite();
 
@@ -44,6 +46,8 @@ namespace esc
 
 		void setType(EObjectType p_eObjectType);
 		EObjectType getType();
+
+		
 
 	protected:
 		sf::Sprite *m_xSprite;

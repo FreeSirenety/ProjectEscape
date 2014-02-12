@@ -13,14 +13,13 @@ namespace esc
 	public:
 		PlayerObject(sf::Sprite *p_sprite, sf::Vector2f p_position, sf::RenderWindow *p_window);
 
-		virtual void update(float deltaTime);
+		virtual void update(float deltaTime, std::vector<GameObject*> Hideableobjects);
 
 		virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
 		void setInteractionRange(float range);
 
 		sf::Vector2f getRangeToObject(GameObject *obj);
-		
 		
 		float calcAngle(float x, float y);
 		
@@ -31,6 +30,7 @@ namespace esc
 
 	protected:
 		
+		int test;
 		float m_walkspeed = 0.4;
 		float m_sneakspeed = 0.2f;
 		sf::Vector2f m_velocity;

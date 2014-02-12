@@ -111,4 +111,8 @@ namespace esc
 		return m_eObjectType;
 	}
 
+	bool GameObject::isHideable()
+	{
+		return m_bInteractable;
+	}
 }
