@@ -5,14 +5,14 @@
 
 namespace esc
 {
-	
+
 	class GameObjectManager;
 	class StateManager;
 
-	class MenuState : public State
+	class GameState : public State
 	{
 	public:
-		MenuState(GameObjectManager *p_xGameObjectManager, StateManager *p_xStateManager);
+		GameState(GameObjectManager *p_xGameObjectManager, StateManager *p_xStateManager);
 
 		virtual void init();
 
@@ -23,9 +23,6 @@ namespace esc
 		virtual void exit();
 
 		virtual void pause();
-
-	protected:
-
 	};
 
 }

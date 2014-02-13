@@ -6,11 +6,11 @@ namespace esc
 {
 
 	PlayerObject::PlayerObject(sf::Sprite *sprite, sf::Vector2f position, sf::RenderWindow *window) 
-			: GameObject(position, sf::Vector2f(sprite->getGlobalBounds().width, sprite->getGlobalBounds().height), false, 10, sprite)
+		: GameObject(position, sf::Vector2f(sprite->getGlobalBounds().width, sprite->getGlobalBounds().height), false, 10, sprite)
 	{
 		m_hiding = false;
-		m_interactionRange = 30.0f;
-		setOrigin(20, 17);
+		m_interactionRange = 50.0f;
+		setOrigin(22, 11);
 		p_window = window;
 	}
 
@@ -25,16 +25,17 @@ namespace esc
 					int i = 0;
 					while( i < Hideableobjects.size())
 					{
-						if ( fabs(getPosition().x - Hideableobjects[i]->getPosition().x) < m_interactionRange &&
-							 fabs(getPosition().y - Hideableobjects[i]->getPosition().y) < m_interactionRange)
+						if (fabs(getPosition().x - (Hideableobjects[i]->getPosition().x + 22)) < m_interactionRange &&
+							 fabs(getPosition().y - (Hideableobjects[i]->getPosition().y + 17)) < m_interactionRange)
 						{
 					
 							m_hiding = true;
-							setPosition(Hideableobjects[i]->getPosition());
+							setPosition(sf::Vector2f(Hideableobjects[i]->getPosition().x + 21, Hideableobjects[i]->getPosition().y + 15));
 							setRotation(0.0f);
 						}
+						i++;
 					}
-					i++;
+					
 				}
 		}
 		
@@ -100,7 +101,7 @@ namespace esc
 
 		printf("Angle: %f\n", angle);
 
-		return angle;
+		return angle + 90;
 		
 		
 		/*float x = mouse_x - getPosition().x;

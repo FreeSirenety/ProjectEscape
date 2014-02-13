@@ -6,6 +6,7 @@ namespace esc
 {
 	class GameObject;
 	class GameObjectManager;
+	class StateManager;
 
 	enum EStateLayers
 	{
@@ -33,6 +34,7 @@ namespace esc
 		std::vector<GameObject*> m_vGameObjects[COUNT];
 
 		GameObjectManager *m_xGameObjectManager;
+		StateManager *m_xStateManager;
 	};
 
 }

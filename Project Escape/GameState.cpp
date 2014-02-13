@@ -1,35 +1,35 @@
-#include "MenuState.h"
+#include "GameState.h"
 #include "GameObjectManager.h"
 #include "StateManager.h"
 
 namespace esc
 {
 
-	MenuState::MenuState(GameObjectManager *p_xGameObjectManager, StateManager *p_xStateManager)
+	GameState::GameState(GameObjectManager *p_xGameObjectManager, StateManager *p_xStateManager)
 	{
 		m_xGameObjectManager = p_xGameObjectManager;
 		m_xStateManager = p_xStateManager;
 	}
 
-	void MenuState::init()
+	void GameState::init()
 	{
 
 	}
 
-	void MenuState::update(float p_fDeltaTime)
+	void GameState::update(float p_fDeltaTime)
 	{
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::G))
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::M))
 		{
-			m_xStateManager->setCurrentState(StateManager::EStates::GAME);
+			m_xStateManager->setCurrentState(StateManager::EStates::MENU);
 		}
-		//printf("MENU");
+		//printf("GAME");
 		for (auto vGameObjects : m_vGameObjects)
 		{
 			m_xGameObjectManager->updateObjects(&vGameObjects, p_fDeltaTime);
 		}
 	}
 
-	void MenuState::draw()
+	void GameState::draw()
 	{
 		for (auto vGameObjects : m_vGameObjects)
 		{
@@ -37,7 +37,7 @@ namespace esc
 		}
 	}
 
-	void MenuState::exit()
+	void GameState::exit()
 	{
 		for (auto vGameObjects : m_vGameObjects)
 		{
@@ -45,9 +45,10 @@ namespace esc
 		}
 	}
 
-	void MenuState::pause()
+	void GameState::pause()
 	{
 
 	}
+
 
 }
